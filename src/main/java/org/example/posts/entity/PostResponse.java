@@ -8,13 +8,13 @@ import java.time.LocalDateTime;
 @Data
 public class PostResponse {
     private Long id;
-    private UserResponse author; // Zmieniono z User na UserResponse
+    private UserResponse author;
     private String content;
     private Integer likesCount;
     private Integer commentsCount;
-    private Boolean isLikedByMe; // Zmieniono z String na Boolean
     private String imageUrl;
-    private LocalDateTime date; // Zmieniono z String na LocalDateTime
+    private LocalDateTime date;
+    private Boolean isLikedByMe;
 
     public PostResponse(Long id, UserResponse author, String content, Integer likesCount, Integer commentsCount, String imageUrl, LocalDateTime date, Boolean isLikedByMe) {
         this.id = id;
@@ -22,8 +22,8 @@ public class PostResponse {
         this.content = content;
         this.likesCount = likesCount;
         this.commentsCount = commentsCount;
-        this.isLikedByMe = isLikedByMe;
         this.imageUrl = imageUrl;
         this.date = date;
+        this.isLikedByMe = isLikedByMe;
     }
 }

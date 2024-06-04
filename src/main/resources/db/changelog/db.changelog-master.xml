@@ -8,4 +8,5 @@
     <include file="db/changelog/db.changelog-2.0-users.xml" />
     <include file="db/changelog/db.changelog-1.0-posts.xml" />
     <include file="db/changelog/db.changelog-3.0-comments.xml" />
+    <include file="db/changelog/db.changelog-4.0-posts-like.xml" />
 </databaseChangeLog>

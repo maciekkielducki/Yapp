@@ -22,13 +22,13 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getAllPosts(@RequestParam(defaultValue = "new") String filter) {
-        List<PostResponse> posts = postService.getAllPosts(filter);
+    public ResponseEntity<List<PostResponse>> getAllPosts(@RequestParam Long userId, @RequestParam String filter) {
+        List<PostResponse> posts = postService.getAllPosts(userId, filter);
         return ResponseEntity.ok(posts);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<PostResponse>> getPostsByUser(@PathVariable Long userId, @RequestParam(defaultValue = "new") String filter) {
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<PostResponse>> getPostsByUser(@PathVariable Long userId, @RequestParam String filter) {
         List<PostResponse> posts = postService.getPostsByUser(userId, filter);
         return ResponseEntity.ok(posts);
     }
@@ -37,24 +37,13 @@ public class PostController {
     public ResponseEntity<PostResponse> createPost(@RequestBody PostRequest postRequest) {
         Post post = postService.createPost(postRequest.getUserId(), postRequest.getContent(), postRequest.getImageUrl());
         UserResponse author = new UserResponse(post.getUser().getId(), post.getUser().getName(), post.getUser().getLastName(), post.getUser().getEmail(), post.getUser().getAvatarColor());
-        PostResponse response = new PostResponse(
-                post.getId(),
-                author,
-                post.getContent(),
-                post.getLikesCount(),
-                post.getCommentsCount(),
-                post.getImageUrl(),
-                post.getDate(),
-                false
-        );
+        PostResponse response = new PostResponse(post.getId(), author, post.getContent(), post.getLikesCount(), post.getCommentsCount(), post.getImageUrl(), post.getDate(), false);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/like")
-    public ResponseEntity<?> likePost(@RequestBody Map<String, Long> payload) {
-        Long userId = payload.get("userId");
-        Long postId = payload.get("postId");
-        postService.likePost(userId, postId);
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<Void> likePost(@PathVariable Long postId, @RequestBody Long userId) {
+        postService.likeOrDislikePost(userId, postId);
         return ResponseEntity.ok().build();
     }
 }
