@@ -18,33 +18,37 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class PostService {
+public class PostService
+{
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
 
-    public List<PostResponse> getAllPosts(Long userId, String filter) {
+    public List<PostResponse> getAllPosts(String filter)
+    {
         List<Post> posts;
         if (filter.equals("top")) {
             posts = postRepository.findAllByOrderByLikesCountDesc();
         } else {
             posts = postRepository.findAllByOrderByDateDesc();
         }
-        return posts.stream().map(post -> convertToPostResponse(post, userId)).collect(Collectors.toList());
+        return posts.stream().map(post -> convertToPostResponse(post)).collect(Collectors.toList());
     }
 
-    public List<PostResponse> getPostsByUser(Long userId, String filter) {
+    public List<PostResponse> getPostsByUser(Long userId, String filter)
+    {
         List<Post> posts;
         if (filter.equals("top")) {
             posts = postRepository.findByUserIdOrderByLikesCountDesc(userId);
         } else {
             posts = postRepository.findByUserIdOrderByDateDesc(userId);
         }
-        return posts.stream().map(post -> convertToPostResponse(post, userId)).collect(Collectors.toList());
+        return posts.stream().map(post -> convertToPostResponseByUserId(post, userId)).collect(Collectors.toList());
     }
 
-    public Post createPost(Long userId, String content, String imageUrl) {
+    public Post createPost(Long userId, String content, String imageUrl)
+    {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Post post = new Post();
         post.setUser(user);
@@ -56,7 +60,8 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public void likeOrDislikePost(Long userId, Long postId) {
+    public void likeOrDislikePost(Long userId, Long postId)
+    {
         Post post = postRepository.findById(postId).orElseThrow();
 
         if (postLikeRepository.existsByPostIdAndUserId(postId, userId)) {
@@ -68,7 +73,8 @@ public class PostService {
         postRepository.save(post);
     }
 
-    private void likePost(Long userId, Post post) {
+    private void likePost(Long userId, Post post)
+    {
         PostLike postLike = new PostLike();
         postLike.setPost(post);
         postLike.setUser(userRepository.findById(userId).orElseThrow());
@@ -76,12 +82,24 @@ public class PostService {
         post.setLikesCount(post.getLikesCount() + 1);
     }
 
-    private void dislikePost(Long postId, Long userId, Post post) {
+    private void dislikePost(Long postId, Long userId, Post post)
+    {
         postLikeRepository.deleteByPostIdAndUserId(postId, userId);
         post.setLikesCount(post.getLikesCount() - 1);
     }
 
-    private PostResponse convertToPostResponse(Post post, Long userId) {
+    private PostResponse convertToPostResponse(Post post)
+    {
+        UserResponse authorResponse = new UserResponse(
+                post.getUser().getId(), post.getUser().getName(), post.getUser().getLastName(), post.getUser().getEmail(), post.getUser().getAvatarColor());
+        boolean isLikedByMe = postLikeRepository.existsByPostId(post.getId());
+        return new PostResponse(
+                post.getId(), authorResponse, post.getContent(), post.getLikesCount(), post.getCommentsCount(),
+                post.getImageUrl(), post.getDate(), isLikedByMe);
+    }
+
+    private PostResponse convertToPostResponseByUserId(Post post, Long userId)
+    {
         UserResponse authorResponse = new UserResponse(
                 post.getUser().getId(), post.getUser().getName(), post.getUser().getLastName(), post.getUser().getEmail(), post.getUser().getAvatarColor());
         boolean isLikedByMe = postLikeRepository.existsByPostIdAndUserId(post.getId(), userId);

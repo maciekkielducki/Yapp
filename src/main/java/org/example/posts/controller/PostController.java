@@ -2,6 +2,7 @@ package org.example.posts.controller;
 
 import lombok.AllArgsConstructor;
 import org.example.posts.entity.Post;
+import org.example.posts.entity.PostLikeRequest;
 import org.example.posts.entity.PostRequest;
 import org.example.posts.entity.PostResponse;
 import org.example.posts.service.PostService;
@@ -22,12 +23,12 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getAllPosts(@RequestParam Long userId, @RequestParam String filter) {
-        List<PostResponse> posts = postService.getAllPosts(userId, filter);
+    public ResponseEntity<List<PostResponse>> getAllPosts(@RequestParam String filter) {
+        List<PostResponse> posts = postService.getAllPosts(filter);
         return ResponseEntity.ok(posts);
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/{userId}")
     public ResponseEntity<List<PostResponse>> getPostsByUser(@PathVariable Long userId, @RequestParam String filter) {
         List<PostResponse> posts = postService.getPostsByUser(userId, filter);
         return ResponseEntity.ok(posts);
@@ -41,9 +42,9 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{postId}/like")
-    public ResponseEntity<Void> likePost(@PathVariable Long postId, @RequestBody Long userId) {
-        postService.likeOrDislikePost(userId, postId);
+    @PostMapping("/like")
+    public ResponseEntity<Void> likePost(@RequestBody PostLikeRequest postLikeRequest) {
+        postService.likeOrDislikePost(postLikeRequest.getUserId(), postLikeRequest.getPostId());
         return ResponseEntity.ok().build();
     }
 }
