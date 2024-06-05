@@ -2,7 +2,6 @@ package org.example.comments.service;
 
 import lombok.AllArgsConstructor;
 import org.example.comments.entity.Comment;
-import org.example.comments.entity.CommentRequest;
 import org.example.comments.entity.CommentResponse;
 import org.example.comments.repository.CommentRepository;
 import org.example.posts.entity.Post;
@@ -12,7 +11,6 @@ import org.example.users.entity.UserResponse;
 import org.example.users.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,7 +51,7 @@ public class CommentService {
                 user.getId(), user.getName(), user.getLastName(), user.getEmail(), user.getAvatarColor());
         return new CommentResponse(
                 comment.getId(), comment.getContent(), userResponse, comment.getLikesCount(),
-                false, comment.getDate()); // `isLikedByMe` should be set based on your application logic
+                false, comment.getDate());
     }
 }
 
