@@ -5,8 +5,6 @@ import org.example.comments.entity.Comment;
 import org.example.comments.entity.CommentRequest;
 import org.example.comments.entity.CommentResponse;
 import org.example.comments.service.CommentService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +19,8 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping("/{postId}")
-    public ResponseEntity<List<CommentResponse>> getCommentsByPost(@PathVariable Long postId) {
-        List<CommentResponse> comments = commentService.getCommentsByPost(postId);
+    public ResponseEntity<List<CommentResponse>> getCommentsByPost(@PathVariable Long postId, @RequestParam Long userId) {
+        List<CommentResponse> comments = commentService.getCommentsByPost(postId, userId);
         return ResponseEntity.ok(comments);
     }
 
@@ -40,4 +38,3 @@ public class CommentController {
         return ResponseEntity.ok().build();
     }
 }
-

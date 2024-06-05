@@ -9,4 +9,5 @@
     <include file="db/changelog/db.changelog-1.0-posts.xml" />
     <include file="db/changelog/db.changelog-3.0-comments.xml" />
     <include file="db/changelog/db.changelog-4.0-posts-like.xml" />
+    <include file="db/changelog/db.changelog-5.0-comments-like.xml" />
 </databaseChangeLog>
