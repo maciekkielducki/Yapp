@@ -1,5 +1,6 @@
 package org.example.posts.service;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.posts.entity.Post;
@@ -59,6 +60,7 @@ public class PostService
         return postRepository.save(post);
     }
 
+    @Transactional
     public void likeOrDislikePost(Long userId, Long postId) {
         Post post = postRepository.findById(postId).orElseThrow();
         log.info("Like or Dislike post: {}", post);
