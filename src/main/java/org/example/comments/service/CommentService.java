@@ -56,6 +56,7 @@ public class CommentService {
 
         messagingTemplate.convertAndSend("/topic/comments", commentMessage);
         post.setCommentsCount(post.getCommentsCount() + 1);
+        postRepository.save(post);
 
         return savedComment;
     }
