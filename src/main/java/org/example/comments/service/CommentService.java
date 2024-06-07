@@ -55,6 +55,7 @@ public class CommentService {
         log.debug("Sending message to /topic/comments: " + commentMessage);
 
         messagingTemplate.convertAndSend("/topic/comments", commentMessage);
+        post.setCommentsCount(post.getCommentsCount() + 1);
 
         return savedComment;
     }
