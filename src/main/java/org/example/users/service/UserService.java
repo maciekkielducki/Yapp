@@ -1,6 +1,7 @@
 package org.example.users.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.users.entity.User;
 import org.example.users.entity.UserRequest;
 import org.example.users.entity.UserResponse;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -20,6 +22,7 @@ public class UserService {
 
     public UserResponse loginUser(String email, String hashedPassword) {
         User user = userRepository.findByEmail(email);
+        log.info("Found user: {}", user);
         if (user != null && user.getPassword().equals(hashedPassword)) {
             return new UserResponse(user.getId(), user.getName(), user.getLastName(), user.getEmail(), user.getAvatarColor());
         }
@@ -28,6 +31,7 @@ public class UserService {
 
     public String registerUser(UserRequest newUserRequest) {
         if (userRepository.findByEmail(newUserRequest.getEmail()) != null) {
+            log.info("User already exists: {}", newUserRequest.getEmail());
             return "EMAIL_TAKEN";
         }
         User newUser = new User();
@@ -37,6 +41,7 @@ public class UserService {
         newUser.setPassword(newUserRequest.getPassword());
         newUser.setAvatarColor(newUserRequest.getAvatarColor());
         userRepository.save(newUser);
+        log.info("Created new user: {}", newUser);
         return "OK";
     }
 }

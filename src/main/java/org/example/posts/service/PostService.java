@@ -1,9 +1,9 @@
 package org.example.posts.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.posts.entity.Post;
 import org.example.posts.entity.PostLike;
-import org.example.posts.entity.PostRequest;
 import org.example.posts.entity.PostResponse;
 import org.example.posts.repository.PostLikeRepository;
 import org.example.posts.repository.PostRepository;
@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class PostService
 {
 
@@ -25,19 +26,17 @@ public class PostService
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
 
-    public List<PostResponse> getAllPosts(String filter)
-    {
+    public List<PostResponse> getAllPosts(String filter) {
         List<Post> posts;
         if (filter.equals("top")) {
             posts = postRepository.findAllByOrderByLikesCountDesc();
         } else {
             posts = postRepository.findAllByOrderByDateDesc();
         }
-        return posts.stream().map(post -> convertToPostResponse(post)).collect(Collectors.toList());
+        return posts.stream().map(this::convertToPostResponse).collect(Collectors.toList());
     }
 
-    public List<PostResponse> getPostsByUser(Long userId, String filter)
-    {
+    public List<PostResponse> getPostsByUser(Long userId, String filter) {
         List<Post> posts;
         if (filter.equals("top")) {
             posts = postRepository.findByUserIdOrderByLikesCountDesc(userId);
@@ -47,8 +46,7 @@ public class PostService
         return posts.stream().map(post -> convertToPostResponseByUserId(post, userId)).collect(Collectors.toList());
     }
 
-    public Post createPost(Long userId, String content, String imageUrl)
-    {
+    public Post createPost(Long userId, String content, String imageUrl) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Post post = new Post();
         post.setUser(user);
@@ -57,13 +55,13 @@ public class PostService
         post.setLikesCount(0);
         post.setCommentsCount(0);
         post.setDate(LocalDateTime.now());
+        log.info("Post created: {}", post);
         return postRepository.save(post);
     }
 
-    public void likeOrDislikePost(Long userId, Long postId)
-    {
+    public void likeOrDislikePost(Long userId, Long postId) {
         Post post = postRepository.findById(postId).orElseThrow();
-
+        log.info("Like or Dislike post: {}", post);
         if (postLikeRepository.existsByPostIdAndUserId(postId, userId)) {
             dislikePost(postId, userId, post);
         } else {
@@ -73,23 +71,22 @@ public class PostService
         postRepository.save(post);
     }
 
-    private void likePost(Long userId, Post post)
-    {
+    private void likePost(Long userId, Post post) {
         PostLike postLike = new PostLike();
         postLike.setPost(post);
         postLike.setUser(userRepository.findById(userId).orElseThrow());
         postLikeRepository.save(postLike);
         post.setLikesCount(post.getLikesCount() + 1);
+        log.info("Like post: {}", post);
     }
 
-    private void dislikePost(Long postId, Long userId, Post post)
-    {
+    private void dislikePost(Long postId, Long userId, Post post) {
         postLikeRepository.deleteByPostIdAndUserId(postId, userId);
         post.setLikesCount(post.getLikesCount() - 1);
+        log.info("Dislike post: {}", post);
     }
 
-    private PostResponse convertToPostResponse(Post post)
-    {
+    private PostResponse convertToPostResponse(Post post) {
         UserResponse authorResponse = new UserResponse(
                 post.getUser().getId(), post.getUser().getName(), post.getUser().getLastName(), post.getUser().getEmail(), post.getUser().getAvatarColor());
         boolean isLikedByMe = postLikeRepository.existsByPostId(post.getId());
@@ -98,8 +95,7 @@ public class PostService
                 post.getImageUrl(), post.getDate(), isLikedByMe);
     }
 
-    private PostResponse convertToPostResponseByUserId(Post post, Long userId)
-    {
+    private PostResponse convertToPostResponseByUserId(Post post, Long userId) {
         UserResponse authorResponse = new UserResponse(
                 post.getUser().getId(), post.getUser().getName(), post.getUser().getLastName(), post.getUser().getEmail(), post.getUser().getAvatarColor());
         boolean isLikedByMe = postLikeRepository.existsByPostIdAndUserId(post.getId(), userId);

@@ -1,8 +1,10 @@
 package org.example.comments.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.comments.entity.Comment;
 import org.example.comments.entity.CommentLike;
+import org.example.comments.entity.CommentMessage;
 import org.example.comments.entity.CommentResponse;
 import org.example.comments.repository.CommentLikeRepository;
 import org.example.comments.repository.CommentRepository;
@@ -11,6 +13,7 @@ import org.example.posts.repository.PostRepository;
 import org.example.users.entity.User;
 import org.example.users.entity.UserResponse;
 import org.example.users.repository.UserRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +22,14 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public List<CommentResponse> getCommentsByPost(Long postId, Long userId) {
         List<Comment> comments = commentRepository.findByPostIdOrderByDateDesc(postId);
@@ -42,7 +47,16 @@ public class CommentService {
         comment.setPost(post);
         comment.setContent(content);
 
-        return commentRepository.save(comment);
+        Comment savedComment = commentRepository.save(comment);
+        log.info("Saved comment {}", savedComment);
+
+        CommentResponse commentResponse = convertToCommentResponse(savedComment, userId);
+        CommentMessage commentMessage = new CommentMessage(postId, commentResponse);
+        log.debug("Sending message to /topic/comments: " + commentMessage);
+
+        messagingTemplate.convertAndSend("/topic/comments", commentMessage);
+
+        return savedComment;
     }
 
     @Transactional
@@ -55,6 +69,7 @@ public class CommentService {
             newCommentLike.setUser(userRepository.findById(userId).orElseThrow());
             newCommentLike.setComment(commentRepository.findById(commentId).orElseThrow());
             commentLikeRepository.save(newCommentLike);
+            log.info("Liked comment: {} by user: {}", newCommentLike.getComment().getId(), userId);
         }
     }
 
