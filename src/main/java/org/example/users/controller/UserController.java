@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import org.example.users.entity.UserRequest;
 import org.example.users.entity.UserResponse;
 import org.example.users.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -36,12 +36,15 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserRequest newUser) {
+    public ResponseEntity<Map<String, String>> registerUser(@RequestBody UserRequest newUser) {
         String result = userService.registerUser(newUser);
+        Map<String, String> response = new HashMap<>();
+        response.put("result", result);
+
         if ("EMAIL_TAKEN".equals(result)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("EMAIL_TAKEN");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
-        return ResponseEntity.ok("OK");
+        return ResponseEntity.ok(response);
     }
 }
 
