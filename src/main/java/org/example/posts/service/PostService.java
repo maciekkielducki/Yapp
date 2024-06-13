@@ -27,14 +27,16 @@ public class PostService
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
 
-    public List<PostResponse> getAllPosts(String filter) {
+    public List<PostResponse> getAllPosts(Long loggedUserId, String filter) {
         List<Post> posts;
         if (filter.equals("top")) {
             posts = postRepository.findAllByOrderByLikesCountDesc();
         } else {
             posts = postRepository.findAllByOrderByDateDesc();
         }
-        return posts.stream().map(this::convertToPostResponse).collect(Collectors.toList());
+        return posts.stream()
+                .map(post -> convertToPostResponse(post, loggedUserId))
+                .collect(Collectors.toList());
     }
 
     public List<PostResponse> getPostsByUser(Long userId, String filter) {
@@ -88,14 +90,20 @@ public class PostService
         log.info("Dislike post: {}", post);
     }
 
-    private PostResponse convertToPostResponse(Post post) {
+    private PostResponse convertToPostResponse(Post post, Long loggedUserId) {
         UserResponse authorResponse = new UserResponse(
                 post.getUser().getId(), post.getUser().getName(), post.getUser().getLastName(), post.getUser().getEmail(), post.getUser().getAvatarColor());
-        boolean isLikedByMe = postLikeRepository.existsByPostId(post.getId());
+
+        boolean isLikedByMe = false;
+        if (loggedUserId != -1) {
+            isLikedByMe = postLikeRepository.existsByPostIdAndUserId(post.getId(), loggedUserId);
+        }
+
         return new PostResponse(
                 post.getId(), authorResponse, post.getContent(), post.getLikesCount(), post.getCommentsCount(),
                 post.getImageUrl(), post.getDate(), isLikedByMe);
     }
+
 
     private PostResponse convertToPostResponseByUserId(Post post, Long userId) {
         UserResponse authorResponse = new UserResponse(

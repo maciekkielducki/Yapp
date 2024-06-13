@@ -7,13 +7,10 @@ import org.example.posts.entity.PostRequest;
 import org.example.posts.entity.PostResponse;
 import org.example.posts.service.PostService;
 import org.example.users.entity.UserResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -23,8 +20,8 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getAllPosts(@RequestParam String filter) {
-        List<PostResponse> posts = postService.getAllPosts(filter);
+    public ResponseEntity<List<PostResponse>> getAllPosts(@RequestParam Long loggedUserId, @RequestParam String filter) {
+        List<PostResponse> posts = postService.getAllPosts(loggedUserId, filter);
         return ResponseEntity.ok(posts);
     }
 

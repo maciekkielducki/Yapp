@@ -1,5 +1,6 @@
 package org.example.comments.service;
 
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.comments.entity.Comment;
@@ -31,10 +32,10 @@ public class CommentService {
     private final CommentLikeRepository commentLikeRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public List<CommentResponse> getCommentsByPost(Long postId, Long userId) {
+    public List<CommentResponse> getCommentsByPost(Long postId, Long userId, Long loggedUserId) {
         List<Comment> comments = commentRepository.findByPostIdOrderByDateDesc(postId);
         return comments.stream()
-                .map(comment -> convertToCommentResponse(comment, userId))
+                .map(comment -> convertToCommentResponse(comment, userId, loggedUserId))
                 .collect(Collectors.toList());
     }
 
@@ -50,9 +51,9 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
         log.info("Saved comment {}", savedComment);
 
-        CommentResponse commentResponse = convertToCommentResponse(savedComment, userId);
+        CommentResponse commentResponse = convertToCommentResponse(savedComment, userId, null);
         CommentMessage commentMessage = new CommentMessage(postId, commentResponse);
-        log.debug("Sending message to /topic/comments: " + commentMessage);
+        log.info("Sending message to /topic/comments: " + commentMessage);
 
         messagingTemplate.convertAndSend("/topic/comments", commentMessage);
         post.setCommentsCount(post.getCommentsCount() + 1);
@@ -83,12 +84,15 @@ public class CommentService {
         return commentLikeRepository.findByUserIdAndCommentId(userId, commentId).isPresent();
     }
 
-    private CommentResponse convertToCommentResponse(Comment comment, Long userId) {
+    private CommentResponse convertToCommentResponse(Comment comment, Long userId, @Nullable Long loggedUserId) {
         User user = comment.getUser();
         UserResponse userResponse = new UserResponse(
                 user.getId(), user.getName(), user.getLastName(), user.getEmail(), user.getAvatarColor());
         long likesCount = getCommentLikesCount(comment.getId());
-        boolean isLikedByMe = isCommentLikedByUser(userId, comment.getId());
+        boolean isLikedByMe = false;
+        if (loggedUserId != null && loggedUserId != -1) {
+            isLikedByMe = isCommentLikedByUser(loggedUserId, comment.getId());
+        }
         return new CommentResponse(
                 comment.getId(), comment.getContent(), userResponse, (int) likesCount,
                 isLikedByMe, comment.getDate());
