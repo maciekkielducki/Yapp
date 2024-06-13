@@ -32,10 +32,10 @@ public class CommentService {
     private final CommentLikeRepository commentLikeRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public List<CommentResponse> getCommentsByPost(Long postId, Long userId, Long loggedUserId) {
+    public List<CommentResponse> getCommentsByPost(Long postId, Long loggedUserId) {
         List<Comment> comments = commentRepository.findByPostIdOrderByDateDesc(postId);
         return comments.stream()
-                .map(comment -> convertToCommentResponse(comment, userId, loggedUserId))
+                .map(comment -> convertToCommentResponse(comment, loggedUserId))
                 .collect(Collectors.toList());
     }
 
@@ -51,7 +51,7 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
         log.info("Saved comment {}", savedComment);
 
-        CommentResponse commentResponse = convertToCommentResponse(savedComment, userId, null);
+        CommentResponse commentResponse = convertToCommentResponse(savedComment, userId);
         CommentMessage commentMessage = new CommentMessage(postId, commentResponse);
         log.info("Sending message to /topic/comments: " + commentMessage);
 
@@ -84,7 +84,7 @@ public class CommentService {
         return commentLikeRepository.findByUserIdAndCommentId(userId, commentId).isPresent();
     }
 
-    private CommentResponse convertToCommentResponse(Comment comment, Long userId, @Nullable Long loggedUserId) {
+    private CommentResponse convertToCommentResponse(Comment comment, @Nullable Long loggedUserId) {
         User user = comment.getUser();
         UserResponse userResponse = new UserResponse(
                 user.getId(), user.getName(), user.getLastName(), user.getEmail(), user.getAvatarColor());
